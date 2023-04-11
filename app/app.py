@@ -22,10 +22,11 @@ def difficult_function():
 
 @app.route('/')
 def hello():
-    count = redis.incr('hits')
+    # Number of customers the microservice has servered
+    num_workers = redis.incr('num_workers')  
     computation_time = difficult_function()
-    return 'Hello There! I have been seen {} times. I have solved the problem in {} seconds.\n'.format(count,
-                                                                                                       computation_time)
+
+    return f'This microservice has servered {num_workers} workers. This problem was solved in {computation_time} seconds.\n'
 
 
 if __name__ == "__main__":
