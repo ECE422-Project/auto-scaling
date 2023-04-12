@@ -1,0 +1,8 @@
+{
+	"dependencies": {
+		"@fastify/cors": "^8.2.1",
+		"@fastify/redis": "^6.1.1",
+		"fastify": "^4.15.0",
+		"redis": "^4.6.5"
+	}
+}
