@@ -10,6 +10,7 @@ services:
         limits:
           cpus: '0.25'
           memory: 256M
+  
   redis:
     image: redis:alpine
     ports:
@@ -19,7 +20,7 @@ services:
         limits:
           cpus: '0.25'
           memory: 256M
-
+  
   visualizer:
     image: zhijiewang22/visualizer
     ports:
