@@ -16,8 +16,16 @@ fastify
     });
 
 
-fastify.get('/status', function (req, reply) {
+fastify.get('/avg_response_time', (req, reply) => {
     const { redis } = fastify;
+
+    redis.get('avg_response_time', (err, val) => {
+        if (err) {
+            reply.send(err);
+        } else {
+            reply.send(val || 0);
+        }
+    });
 
     redis.mget(
         'avg_response_time', 'num_replications', 'num_visitors', 
@@ -33,6 +41,29 @@ fastify.get('/status', function (req, reply) {
     );
 });
 
+fastify.get('/replicas', (req, reply) => {
+    const { redis } = fastify;
+
+    redis.get('num_replications', (err, val) => {
+        if (err) {
+            reply.send(err);
+        } else {
+            reply.send(val || 0);
+        }
+    });
+});
+
+fastify.get('/workload', (req, reply) => {
+    const { redis } = fastify;
+
+    redis.get('workload', (err, val) => {
+        if (err) {
+            reply.send(err);
+        } else {
+            reply.send(val || 0);
+        }
+    });
+});
 
 fastify.listen({ host: '0.0.0.0', port: 3000 }, err => {
     if (err) {
