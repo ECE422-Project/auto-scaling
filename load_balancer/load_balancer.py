@@ -8,14 +8,13 @@ from flask import Flask, request, render_template
 from redis import Redis
 
 
-BALANCER_SLEEP_TIME = 20
-OBSERVER_SLEEP_TIME = 4
+BALANCER_SLEEP_TIME = 10
 
 app = Flask('Load Balancer')
 
 redis = Redis(host='10.2.6.145', port=6379) 
 
-responses: dict = {}
+response_times = []
 
 
 """
@@ -52,6 +51,11 @@ class LoadBalancer(threading.Thread):
             time.sleep(BALANCER_SLEEP_TIME)
             
             current = self.get_num_visitors()
+            if current == 0 and prev > 0:
+                current = 0
+                prev = 0
+                continue
+
             diff = current - prev # arrival rate per 20 seconds -> lambda
 
             # average response time per worker -> 1 / mu
@@ -59,6 +63,8 @@ class LoadBalancer(threading.Thread):
             
             # p = lambda / mu
             traffic_intensity = (diff / BALANCER_SLEEP_TIME) * avg_response_time              
+
+            self.redis.set('workload', traffic_intensity if traffic_intensity > 0 else 0)
 
             # p + sqrt(p)
             thersold = traffic_intensity + math.sqrt(traffic_intensity)  
@@ -69,7 +75,14 @@ class LoadBalancer(threading.Thread):
             num_replications = self.get_services().attrs['Spec']['Mode']['Replicated']['Replicas']
             self.update_num_replications(num_replications)
 
-            print(f'\nIn {BALANCER_SLEEP_TIME} seconds:\n{diff} visitors has arrived\nAverage Response Time = {avg_response_time}\nTraffic Intensity = {traffic_intensity}\nThersold = {thersold}\nNumber of Replications = {num_replications}\nFactor = {factor}')
+            print(f'\nIn {BALANCER_SLEEP_TIME} seconds:\n' \
+                  f'{diff} visitors has arrived\n' \
+                  f'Average Response Time = {avg_response_time}\n' \
+                  f'Traffic Intensity = {traffic_intensity}\n' \
+                  f'Thersold = {thersold}\n' \
+                  f'Number of Replications = {num_replications}\n' \
+                  f'Factor = {factor}'
+            )
 
             # Scale Up / Down / Stable
             if num_replications >= factor and (num_replications - factor) / num_replications > 0.5:
@@ -102,35 +115,39 @@ def post_response_time():
     
     data = request.json
 
-    thread_id = data.get('thread_id')
     response_time = data.get('response_time')
     
-    responses[thread_id] = response_time
+    response_times.append(response_time)
 
     # average response time per worker
-    avg_response_time = 0.0 if len(responses) == 0 else \
-            sum(responses.values()) / len(responses)
+    avg_response_time = 0.0 if len(response_times) == 0 else \
+            sum(response_times) / len(response_times)
+
+    print(avg_response_time)
 
     redis.set('avg_response_time', avg_response_time)
-    redis.publish('avg_response_time_channel', avg_response_time)
 
     return ''
 
 
 @app.route('/')
 def get_response_time():
-    if len(responses) == 0:
+    if len(response_times) == 0:
         return 'No response data yet'
 
-    stats = []
-    total = 0
-    for thread_id, time in responses.items():
-        stats.append(f'Visitor {thread_id}: {time}')
-        total += time
-    avg = total / len(stats)
+    return render_template(
+            'index.html', 
+            avg=sum(response_times) / len(response_times), 
+            times=response_times
+    ) 
 
-    return render_template('index.html', avg=avg, stats=stats) 
+@app.route('/reset')
+def reset():
+    redis.set('avg_response_time', 0)
+    redis.set('num_visitors', 0)
+    redis.set('workload', 0)
 
+    return 'Reset'
 
 
 if __name__ == '__main__':
