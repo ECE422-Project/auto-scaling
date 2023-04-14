@@ -1,11 +1,13 @@
-from flask import Flask
-from redis import Redis
 import random
 import time
 
+from flask import Flask
+from redis import Redis
+
 
 app = Flask(__name__)
-redis = Redis(host='redis', port=6379)
+
+redis = Redis(host='10.2.6.145', port=6379)
 
 
 def difficult_function():
@@ -24,7 +26,6 @@ def difficult_function():
 def hello():
     # Number of customers the microservice has servered
     num_visitors = redis.incr('num_visitors')
-    num_subscribers = redis.publish('visitors_channel', num_visitors)
     computation_time = difficult_function()
 
     return f'This microservice has servered {num_visitors} visitors. This problem was solved in {computation_time} seconds.\n'
