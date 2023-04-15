@@ -15,6 +15,9 @@ const replicasConfig = {
             x: {
                 type: 'realtime',
                 realtime: {
+                    duration: 20000,
+                    refresh: 1000,
+                    delay: 2000,
                     onRefresh: async (chart) => {
                         const r = await fetch('http://10.2.6.145:3000/replicas');
                         const json = await r.json();
@@ -49,6 +52,9 @@ const timeConfig = {
             x: {
                 type: 'realtime',
                 realtime: {
+                    duration: 20000,
+                    refresh: 1000,
+                    delay: 2000,
                     onRefresh: async (chart) => {
                         const r = await fetch('http://10.2.6.145:3000/avg_response_time');
                         const json = await r.json();
@@ -71,7 +77,7 @@ const workloadConfig = {
     data: {
         datasets: [
             {
-                label: 'Workload',
+                label: 'Workload (Arrival rate within 10 seconds)',
                 backgroundColor: 'rgba(0, 0, 0, 0.8)',
                 borderColor: 'rgba(0, 0, 0)',
                 data: []
@@ -83,6 +89,9 @@ const workloadConfig = {
             x: {
                 type: 'realtime',
                 realtime: {
+                    duration: 20000,
+                    refresh: 1000,
+                    delay: 2000,
                     onRefresh: async (chart) => {
                         const r = await fetch('http://10.2.6.145:3000/workload');
                         const json = await r.json();
