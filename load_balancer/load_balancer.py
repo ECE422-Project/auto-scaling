@@ -76,16 +76,16 @@ class LoadBalancer(threading.Thread):
             self.update_num_replications(num_replications)
 
             print(f'\nIn {BALANCER_SLEEP_TIME} seconds:\n' \
-                  f'{diff} visitors has arrived\n' \
-                  f'Average Response Time = {avg_response_time}\n' \
-                  f'Traffic Intensity = {traffic_intensity}\n' \
-                  f'Thersold = {thersold}\n' \
-                  f'Number of Replications = {num_replications}\n' \
-                  f'Factor = {factor}'
+                  f'{diff} visitors has arrived, arrival rate (lambda) = {diff / BALANCER_SLEEP_TIME} visitors / seconds\n' \
+                  f'Average Response Time (1 / mu)  = {avg_response_time}\n' \
+                  f'Traffic Intensity (p = lambda / mu) = {traffic_intensity}\n' \
+                  f'Thersold (p + sqrt(p)) = {thersold}\n' \
+                  f'Factor (max(1, (p + sqrt(p)) = {factor}\n' \
+                  f'Number of Replications = {num_replications}'
             )
 
             # Scale Up / Down / Stable
-            if num_replications >= factor and (num_replications - factor) / num_replications > 0.5:
+            if num_replications >= factor and (num_replications - factor) / num_replications >= 0.5:
                 scale_down = math.floor(factor)
                 warning = self.get_services().scale(scale_down)
 
@@ -96,7 +96,7 @@ class LoadBalancer(threading.Thread):
                     self.update_num_replications(scale_down)
 
             elif num_replications < factor:
-                scale_up = math.floor(factor)
+                scale_up = math.ceil(factor)
                 warning = self.get_services().scale(scale_up)
 
                 if warning['Warnings'] != None:
@@ -120,10 +120,11 @@ def post_response_time():
     response_times.append(response_time)
 
     # average response time per worker
-    avg_response_time = 0.0 if len(response_times) == 0 else \
+    if len(response_times) >= 10:
+        avg_response_time = sum(response_times[len(response_times) - 10:len(response_times)]) / 10
+    else:
+        avg_response_time = 0.0 if len(response_times) == 0 else \
             sum(response_times) / len(response_times)
-
-    print(avg_response_time)
 
     redis.set('avg_response_time', avg_response_time)
 
