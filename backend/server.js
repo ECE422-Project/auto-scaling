@@ -65,7 +65,7 @@ fastify.get('/workload', (req, reply) => {
     });
 });
 
-fastify.listen({ host: '0.0.0.0', port: 3000 }, err => {
+fastify.listen({ host: '0.0.0.0', port: 9000 }, err => {
     if (err) {
         throw err;
     }
