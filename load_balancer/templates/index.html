@@ -5,10 +5,10 @@
     </head>
     <body>
         <p>Average Response Time: {{ avg }}</p>
-        <p>Response time for each worker</p>
+        <p>Response time history</p>
         <ul>
-            {% for stat in stats: %}
-            <li>{{ stat }}</li>
+            {% for time in times: %}
+            <li>{{ time }}</li>
             {% endfor %}
         </ul>
     </body>
