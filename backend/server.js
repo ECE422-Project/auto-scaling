@@ -26,19 +26,6 @@ fastify.get('/avg_response_time', (req, reply) => {
             reply.send(val || 0);
         }
     });
-
-    redis.mget(
-        'avg_response_time', 'num_replications', 'num_visitors', 
-        (err, vals) => {
-            if (err) {
-                reply.send(err);
-            } else {
-                const data = [];
-                vals.forEach(val => data.push(val || 0));
-                reply.send(data);
-            }
-        }
-    );
 });
 
 fastify.get('/replicas', (req, reply) => {
